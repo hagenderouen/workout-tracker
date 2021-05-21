@@ -1,9 +1,14 @@
 const router = require('express').Router();
-const { Workout, Exercise } = require('../../models');  
+const { Workout } = require('../../models');  
 
 router.get('/workouts', async (req, res) => {
     try {
-        const workouts = await Workout.find().sort('day');
+        const workouts = await Workout
+        .aggregate()
+        .addFields({
+            totalDuration: { $sum: ['$exercises.duration']}
+        })
+        .sort('day');
         console.log(workouts);
         res.json(workouts);
     } catch (error) {
@@ -26,7 +31,7 @@ router.post('/workouts', async (req, res) => {
     try {
         const newWorkout = new Workout({
             ...req.body,
-            day: new Date().setDate(new Date().getDate()-10)
+            day: Date.now()
         });
         const savedWorkout = await newWorkout.save();
         res.json(savedWorkout);
@@ -38,7 +43,11 @@ router.post('/workouts', async (req, res) => {
 
 router.get('/workouts/range', async (req, res) => {
     try {
-        const workouts = await Workout.find();
+        const workouts = await Workout
+        .aggregate()
+        .addFields({
+            totalDuration: { $sum: ['$exercises.duration']}
+        });
         console.log(workouts);
         res.json(workouts);
     } catch (error) {
