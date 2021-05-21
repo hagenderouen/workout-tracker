@@ -6,12 +6,21 @@ const WorkoutSchema = new Schema({
         type: Number,
         required: true
     },
-    exercises: [
-        {
-            type: Schema.Types.ObjectId,
-            ref: 'Exercise'
-        } 
-    ]
+    exercises: [],
+    totalDuration: {
+        type: Number
+    }
+});
+
+WorkoutSchema.post('find', (doc) => {
+    
+    doc.forEach((workout) => {
+        const totalDuration = workout.exercises
+        .map(exercise => exercise.duration)
+        .reduce((sum, val) => sum + val, 0);
+
+        workout.totalDuration = totalDuration;
+    });
 });
 
 const Workout = mongoose.model('Workout', WorkoutSchema);
